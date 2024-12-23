@@ -124,7 +124,17 @@ namespace NapCatDemo
                     if (recmsgdic.ContainsKey("message"))
                     {
                         JsonElement msgdic = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(recmsgdic["message"].ToString());
-
+                        if (msgdic.ValueKind==JsonValueKind.Array)
+                        {
+                            foreach (var item in msgdic.EnumerateArray())
+                            {
+                                if (item.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("text", out JsonElement text))
+                                {
+                                    string msgtext = text.GetString();
+                                }
+                            }
+                        }
+                        
                         
                     }
                     
