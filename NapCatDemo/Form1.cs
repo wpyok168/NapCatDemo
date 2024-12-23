@@ -12,6 +12,7 @@ using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 using TouchSocket.Http;
 using WinDownLoad;
+using System.Text.Json;
 
 namespace NapCatDemo
 {
@@ -24,13 +25,15 @@ namespace NapCatDemo
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            WinISODownLoadAPI  winapi = new WinISODownLoadAPI();
-            winapi.SendMsgEvent += (szGruopId, szQQId, obj, isprivatemsg) =>
-            {
-               Type type = obj.GetType();
-            };
-            winapi.GetWin11ISOaddr(414725048, 414725048, "", "3113", false);
-            //TouchSocket();
+            //WinISODownLoadAPI  winapi = new WinISODownLoadAPI();
+            //winapi.SendMsgEvent += (szGruopId, szQQId, obj, isprivatemsg) =>
+            //{
+            //   Type type1 = obj.GetType();
+            //    string name = type1.Name;
+            //    string tn = type1.ToString();
+            //};
+            //winapi.GetWin11ISOaddr(414725048, 414725048, "", "3113", false);
+            TouchSocket();
         }
         WebSocketClient client = new WebSocketClient();
         private void TouchSocket()
@@ -69,7 +72,7 @@ namespace NapCatDemo
                             //string msg1 = "{\"action\":\"send_private_msg\",\"params\":{\"user_id\":2403875843,\"message\":\"你好！ NapCat ws\",\"auto_escape\":false}, \"echo\":\"\"}";
                             //client.SendAsync(msg1).Wait();
                         }
-
+                        RobotQQ(recmsg);
                         break;
                     case WSDataType.Binary:
                         byte[] by = e.DataFrame.PayloadData.ReadBytesPackage();
@@ -108,6 +111,46 @@ namespace NapCatDemo
         {
             string msg1 = "{\"action\":\"send_private_msg\",\"params\":{\"user_id\":2403875843,\"message\":\"你好！ NapCat ws\",\"auto_escape\":false}, \"echo\":\"\"}";
             await client.SendAsync(msg1);
+        }
+
+        private void RobotQQ(string recmsg) 
+        {
+            try
+            {
+                // JsonDocument recmsgdic = System.Text.Json.JsonDocument.Parse(recmsg);
+                Dictionary<string, object> recmsgdic = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,object>>(recmsg);
+                if (recmsgdic != null)
+                {
+                    if (recmsgdic.ContainsKey("message"))
+                    {
+                        JsonElement msgdic = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(recmsgdic["message"].ToString());
+
+                        
+                    }
+                    
+                    if (recmsgdic["sub_type"].ToString().Equals("friend"))
+                    {
+
+                    }
+                    else if (recmsgdic["sub_type"].ToString().Equals("group"))
+                    {
+                        if (recmsgdic["message_type"].ToString().Equals("private"))
+                        {
+
+                        }
+                        else if (recmsgdic["message_type"].ToString().Equals("group"))
+                        {
+
+                        }
+                    }
+                }
+                
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
     }
 }
