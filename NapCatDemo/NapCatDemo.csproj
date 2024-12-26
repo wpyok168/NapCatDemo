@@ -131,6 +131,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SqliteHelpProject\SqliteHelpProject.csproj">
+      <Project>{c1cef060-5c41-4752-b04b-6016747c69da}</Project>
+      <Name>SqliteHelpProject</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WinDownLoad\WinDownLoad.csproj">
       <Project>{c9a0a07f-5ae1-473d-b3a6-df6d50989deb}</Project>
       <Name>WinDownLoad</Name>
