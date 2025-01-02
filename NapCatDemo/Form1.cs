@@ -40,7 +40,7 @@ namespace NapCatDemo
             TouchSocket();
         }
         WebSocketClient client = new WebSocketClient();
-        private event Action<long, long, object, bool> SendMsgEvent;
+
         private void TouchSocket()
         {
             //var client = new WebSocketClient();
@@ -77,7 +77,9 @@ namespace NapCatDemo
                             //string msg1 = "{\"action\":\"send_private_msg\",\"params\":{\"user_id\":2403875843,\"message\":\"你好！ NapCat ws\",\"auto_escape\":false}, \"echo\":\"\"}";
                             //client.SendAsync(msg1).Wait();
                         }
-                        RobotQQ(recmsg);
+                        //RobotQQ(recmsg);
+                        RobotWork(recmsg);
+                        DownLoadofficeISO(recmsg);
                         break;
                     case WSDataType.Binary:
                         byte[] by = e.DataFrame.PayloadData.ReadBytesPackage();
@@ -114,7 +116,9 @@ namespace NapCatDemo
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            string msg1 = "{\"action\":\"send_private_msg\",\"params\":{\"user_id\":2403875843,\"message\":\"你好！ NapCat ws\",\"auto_escape\":false}, \"echo\":\"\"}";
+            string user_id = "2403875843";
+            string sendmsg = "你好！ NapCat！！";
+            string msg1 = $"{{\"action\":\"send_private_msg\",\"params\":{{\"user_id\":{user_id},\"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}}";
             await client.SendAsync(msg1);
         }
 
@@ -126,6 +130,7 @@ namespace NapCatDemo
                 Dictionary<string, object> recmsgdic = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,object>>(recmsg);
                 if (recmsgdic != null)
                 {
+                    GetMsgText(recmsg);
                     string msgtext = string.Empty;
                     if (recmsgdic.ContainsKey("message"))
                     {
@@ -171,6 +176,114 @@ namespace NapCatDemo
             }
         }
 
+        private async void SendMsg(string recmsg,string sendmsg)
+        {
+            try
+            {
+                JsonDocument recmsgdic = System.Text.Json.JsonDocument.Parse(recmsg);
+                if (recmsgdic != null)
+                {
+                    if (recmsgdic.RootElement.TryGetProperty("message", out JsonElement message))
+                    {
+                        if (message.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var item in message.EnumerateArray())
+                            {
+                                if (item.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("text", out JsonElement text))
+                                {
+                                    string msgtext = text.GetString();
+                                    if (recmsgdic.RootElement.TryGetProperty("sub_type", out JsonElement subtype))
+                                    {
+                                        if (subtype.GetString().Equals("friend") && string.IsNullOrEmpty(msgtext)) //好友消息
+                                        {
+                                            if (recmsgdic.RootElement.TryGetProperty("sender", out JsonElement sender) && sender.TryGetProperty("user_id", out JsonElement user_id))
+                                            {
+                                                string _user_id = user_id.GetString();
+                                                string msg1 = $"{{\"action\":\"send_private_msg\",\"params\":{{\"user_id\":{_user_id},\"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}}";
+                                                await client.SendAsync(msg1);
+                                            }
+                                        }
+                                        else if (subtype.GetString().Equals("group") && string.IsNullOrEmpty(msgtext))
+                                        {
+                                            if (recmsgdic.RootElement.TryGetProperty("message_type", out JsonElement messagetype))
+                                            {
+                                                if (messagetype.GetString().Equals("private"))//群私聊消息
+                                                {
+
+                                                }
+                                                else if (messagetype.GetString().Equals("group"))//群消息
+                                                {
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+        }
+        private string GetMsgText(string recmsg)
+        {
+            System.Text.Json.JsonDocument recmsgdic = System.Text.Json.JsonDocument.Parse(recmsg);
+            string msgtext = string.Empty;
+            if (recmsgdic.RootElement.TryGetProperty("message", out JsonElement message))
+            {
+                if(message.ValueKind==JsonValueKind.Array)
+                {
+                    foreach (var item in message.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("text", out JsonElement text))
+                        {
+                            msgtext = text.GetString();
+                        }
+                    }
+                }
+            }
+            return msgtext;
+        }
+
+        private RecMsgMode GetRecMsgMode(string recmsg)
+        {
+            RecMsgMode recmsgMode = new RecMsgMode();
+            System.Text.Json.JsonDocument recmsgdic = System.Text.Json.JsonDocument.Parse(recmsg);
+            if (recmsgdic.RootElement.TryGetProperty("group_id", out JsonElement group_id))
+            {
+                recmsgMode.GroupID = long.Parse(group_id.GetString());
+            }
+            if (recmsgdic.RootElement.TryGetProperty("user_id", out JsonElement user_id))
+            {
+                recmsgMode.UserID = long.Parse(user_id.GetString());
+            }
+            if (recmsgdic.RootElement.TryGetProperty("sub_type", out JsonElement sub_type))
+            {
+                recmsgMode.IsFriend = sub_type.GetString().Equals("friend") ? true : false;
+                recmsgMode.IsGroupPrivate = sub_type.GetString().Equals("group") ? true : false;
+            }
+            if (recmsgdic.RootElement.TryGetProperty("message", out JsonElement message))
+            {
+                if (message.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in message.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("text", out JsonElement text))
+                        {
+                            recmsgMode.RecMsgContent = text.GetString();
+                        }
+                    }
+                }
+            }
+            return recmsgMode;
+        }
+
         private static ISection isection = null;
         private static List<KeyValuePair<string, IValue>> isection1 = null;
 
@@ -184,23 +297,17 @@ namespace NapCatDemo
                 {
                     sendstr += (MTComon.Inode.ElementAt(i).SectionName + "\r\n");
                 }
-                MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, sendstr);
-                SendMsgEvent += (gid,fid,msg,flag)=> { };
+                SendMsg(recmsg, sendstr);
             }
         }
 
-        private void Form1_SendMsgEvent(long arg1, long arg2, object arg3, bool arg4)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void DownLoadofficeISO(PrivateMsg e)
+        private void DownLoadofficeISO(string recmsg)
         {
             int isname = -1;
             for (int i = 0; i < MTComon.Inode.Count; i++)
             {
                 string SectionName = MTComon.Inode.ElementAt(i).SectionName.ToLower();
-                string tempstr = e.Msg.ToLower().Replace(" ", "");
+                string tempstr = GetRecMsgMode(recmsg).RecMsgContent.Replace(" ", "");
                 if (tempstr.Equals(SectionName))
                 {
                     isname = i;
@@ -208,7 +315,7 @@ namespace NapCatDemo
 
             }
             //string nodename = MTComon.Inode[e.Msg.ToLower().Replace(" ", "")].SectionName;
-            bool[] falg = dlof10.Select(t => t.Key == e.FromQQ).ToArray();
+            bool[] falg = dlof10.Select(t => t.Key == GetRecMsgMode(recmsg).UserID).ToArray();
 
             if (isname >= 0 && falg.Count() == 0)
             {
@@ -231,35 +338,34 @@ namespace NapCatDemo
                 }
                 try
                 {
-                    dlof10.Add(e.FromQQ, e.FromGroup);
+                    dlof10.Add(GetRecMsgMode(recmsg).UserID, GetRecMsgMode(recmsg).GroupID);
                 }
                 catch (Exception)
                 {
 
                 }
-                MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, sendstr);
-                return;
+                SendMsg(recmsg, sendstr);
             }
             if (dlof10.Count > 0)
             {
-                KeyValuePair<long, long> windwl = dlof10.FirstOrDefault(t => t.Key == e.FromQQ);
-                if (windwl.Key == e.FromQQ)
+                KeyValuePair<long, long> windwl = dlof10.FirstOrDefault(t => t.Key == GetRecMsgMode(recmsg).UserID);
+                if (windwl.Key == GetRecMsgMode(recmsg).UserID)
                 {
                     try
                     {
-                        if (Regex.IsMatch(e.Msg, "\\d") && int.Parse(e.Msg) <= isection.Count)
+                        if (Regex.IsMatch(GetRecMsgMode(recmsg).RecMsgContent, "\\d") && int.Parse(GetRecMsgMode(recmsg).RecMsgContent) <= isection.Count)
                         {
-                            dlof10.Remove(e.FromQQ);
-                            MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, isection1.ElementAt(int.Parse(e.Msg) - 1).Value.ToString().Replace(";", "\r\n")); //ini配置文件分隔符
+                            dlof10.Remove(GetRecMsgMode(recmsg).UserID);
+                            SendMsg(recmsg, isection1.ElementAt(int.Parse(GetRecMsgMode(recmsg).RecMsgContent) - 1).Value.ToString().Replace(";", "\r\n")); //ini配置文件分隔符
                         }
                         else
                         {
-                            dlof10.Remove(e.FromQQ);
+                            dlof10.Remove(GetRecMsgMode(recmsg).UserID);
                         }
                     }
                     catch (Exception)
                     {
-                        dlof10.Remove(e.FromQQ);
+                        dlof10.Remove(GetRecMsgMode(recmsg).UserID);
                     }
                 }
             }
@@ -270,63 +376,35 @@ namespace NapCatDemo
         private static Dictionary<long, long> dlwin7 = new Dictionary<long, long>();
         private static Dictionary<long, long> dlwin11 = new Dictionary<long, long>();
 
-        public void DownLoadWinISO(PrivateMsg e)
+        public void DownLoadWinISO(string recmsg)
         {
-            //KJ8Q3-YP78Y-JBTDM-KGRQQ-49YDC
-            Debug.Print(e.Msg.ToLower().Replace(" ", ""));
-            if (e.Msg.ToLower().Replace(" ", "").Equals("win7---###----下载"))
+            
+            if (GetRecMsgMode(recmsg).RecMsgContent.ToLower().Replace(" ", "").Equals("win10下载"))
             {
-                //WinISODownLoad winl = new WinISODownLoad();
-                ////YFFJQ-YCWH8-2PWJ8-BX834-VQ66G //KJ8Q3-YP78Y-JBTDM-KGRQQ-49YDC
-                //winl.GetWin7Download("YFFJQ-YCWH8-2PWJ8-BX834-VQ66G", e.FromQQ, e.ThisQQ, "", true);
 
                 try
                 {
-                    dlwin7.Add(e.FromQQ, e.FromQQ);
+                    dlwin10.Add(GetRecMsgMode(recmsg).UserID, GetRecMsgMode(recmsg).UserID);
                 }
                 catch (Exception)
                 {
 
                     throw;
                 }
-                MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, WinVerInfo.sendstr_7);
-                return;
-            }
-            if (e.Msg.ToLower().Replace(" ", "").Equals("win8.1下载"))
-            {
-                if (GetDb81ISOAddr(e))
-                {
-                    WinISODownLoadAPI winl = new WinISODownLoadAPI();
-                    winl.GetWin81ISOaddr(e.FromQQ, long.Parse(MC_SDK.Common.MC_API.GetRobotQQ()), "", true);
-                }
-
-            }
-            if (e.Msg.ToLower().Replace(" ", "").Equals("win10下载"))
-            {
-
-                try
-                {
-                    dlwin10.Add(e.FromQQ, e.FromQQ);
-                }
-                catch (Exception)
-                {
-
-                    throw;
-                }
-                MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, WinVerInfo.sendst_10);
+                SendMsg(recmsg, WinVerInfo.sendst_10);
                 return;
             }
             if (dlwin10.Count > 0)
             {
-                KeyValuePair<long, long> windwl = dlwin10.FirstOrDefault(t => t.Key == e.FromQQ);
-                if (windwl.Key == e.FromQQ)
+                KeyValuePair<long, long> windwl = dlwin10.FirstOrDefault(t => t.Key == GetRecMsgMode(recmsg).UserID);
+                if (windwl.Key == GetRecMsgMode(recmsg).UserID)
                 {
                     try
                     {
-                        if (Regex.IsMatch(e.Msg, "\\d") && int.Parse(e.Msg) <= WinVerInfo.win10ver.Count)
+                        if (Regex.IsMatch(GetRecMsgMode(recmsg).RecMsgContent, "\\d") && int.Parse(GetRecMsgMode(recmsg).RecMsgContent) <= WinVerInfo.win10ver.Count)
                         {
-                            dlwin10.Remove(e.FromQQ);
-                            if (GetDbISOAddr(e, WinVerInfo.win10ver.ElementAt(int.Parse(e.Msg) - 1).Value))
+                            dlwin10.Remove(GetRecMsgMode(recmsg).UserID);
+                            if (GetDbISOAddr(recmsg, WinVerInfo.win10ver.ElementAt(int.Parse(GetRecMsgMode(recmsg).RecMsgContent) - 1).Value))
                             {
                                 WinISODownLoadAPI winl = new WinISODownLoadAPI();
                                 winl.GetWin10ISOaddr(windwl.Value, long.Parse(MC_SDK.Common.MC_API.GetRobotQQ()), WinVerInfo.win10ver.ElementAt(int.Parse(e.Msg) - 1).Key, WinVerInfo.win10ver.ElementAt(int.Parse(e.Msg) - 1).Value, true);
@@ -344,35 +422,7 @@ namespace NapCatDemo
                     }
                 }
             }
-            if (dlwin7.Count > 0)
-            {
-                KeyValuePair<long, long> windwl = dlwin7.FirstOrDefault(t => t.Key == e.FromQQ);
-                if (windwl.Key == e.FromQQ)
-                {
-                    try
-                    {
-                        if (Regex.IsMatch(e.Msg, "\\d") && int.Parse(e.Msg) <= WinVerInfo.win7ver.Count)
-                        {
-                            dlwin7.Remove(e.FromQQ);
-                            if (GetDbISOAddr(e, WinVerInfo.win7ver.ElementAt(int.Parse(e.Msg) - 1).Value))
-                            {
-                                WinISODownLoadAPI winl = new WinISODownLoadAPI();
-
-                                //YFFJQ-YCWH8-2PWJ8-BX834-VQ66G //KJ8Q3-YP78Y-JBTDM-KGRQQ-49YDC
-                                winl.GetWin7ISOaddr(WinVerInfo.win7ver.ElementAt(int.Parse(e.Msg) - 1).Value, windwl.Value, long.Parse(MC_SDK.Common.MC_API.GetRobotQQ()), "", true, WinVerInfo.win7ver.ElementAt(int.Parse(e.Msg) - 1).Key);
-                            }
-                        }
-                        else
-                        {
-                            dlwin7.Remove(e.FromQQ);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        dlwin7.Remove(e.FromQQ);
-                    }
-                }
-            }
+            
             win11(e);
         }
         private void win11(PrivateMsg e)
@@ -420,7 +470,7 @@ namespace NapCatDemo
                 }
             }
         }
-        private bool GetDbISOAddr(PrivateMsg e, string key)
+        private bool GetDbISOAddr(string recmsg, string key)
         {
             bool falg = true;
             string sql = $"select * from isoaddr where 密钥='{key}'";
@@ -504,5 +554,8 @@ namespace NapCatDemo
             dr.Close();
             return falg;
         }
+
+
+
     }
 }
