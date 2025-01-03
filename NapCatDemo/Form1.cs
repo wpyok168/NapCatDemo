@@ -29,10 +29,10 @@ namespace NapCatDemo
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //WinISODownLoadAPI  winapi = new WinISODownLoadAPI();
+            //WinISODownLoadAPI winapi = new WinISODownLoadAPI();
             //winapi.SendMsgEvent += (szGruopId, szQQId, obj, isprivatemsg) =>
             //{
-            //   Type type1 = obj.GetType();
+            //    Type type1 = obj.GetType();
             //    string name = type1.Name;
             //    string tn = type1.ToString();
             //};
@@ -303,11 +303,12 @@ namespace NapCatDemo
 
         private void DownLoadofficeISO(string recmsg)
         {
+            RecMsgMode msg = GetRecMsgMode(recmsg);
             int isname = -1;
             for (int i = 0; i < MTComon.Inode.Count; i++)
             {
                 string SectionName = MTComon.Inode.ElementAt(i).SectionName.ToLower();
-                string tempstr = GetRecMsgMode(recmsg).RecMsgContent.Replace(" ", "");
+                string tempstr = msg.RecMsgContent.Replace(" ", "");
                 if (tempstr.Equals(SectionName))
                 {
                     isname = i;
@@ -315,7 +316,7 @@ namespace NapCatDemo
 
             }
             //string nodename = MTComon.Inode[e.Msg.ToLower().Replace(" ", "")].SectionName;
-            bool[] falg = dlof10.Select(t => t.Key == GetRecMsgMode(recmsg).UserID).ToArray();
+            bool[] falg = dlof10.Select(t => t.Key == msg.UserID).ToArray();
 
             if (isname >= 0 && falg.Count() == 0)
             {
@@ -338,7 +339,7 @@ namespace NapCatDemo
                 }
                 try
                 {
-                    dlof10.Add(GetRecMsgMode(recmsg).UserID, GetRecMsgMode(recmsg).GroupID);
+                    dlof10.Add(msg.UserID, msg.GroupID);
                 }
                 catch (Exception)
                 {
@@ -348,24 +349,24 @@ namespace NapCatDemo
             }
             if (dlof10.Count > 0)
             {
-                KeyValuePair<long, long> windwl = dlof10.FirstOrDefault(t => t.Key == GetRecMsgMode(recmsg).UserID);
-                if (windwl.Key == GetRecMsgMode(recmsg).UserID)
+                KeyValuePair<long, long> windwl = dlof10.FirstOrDefault(t => t.Key == msg.UserID);
+                if (windwl.Key == msg.UserID)
                 {
                     try
                     {
-                        if (Regex.IsMatch(GetRecMsgMode(recmsg).RecMsgContent, "\\d") && int.Parse(GetRecMsgMode(recmsg).RecMsgContent) <= isection.Count)
+                        if (Regex.IsMatch(msg.RecMsgContent, "\\d") && int.Parse(msg.RecMsgContent) <= isection.Count)
                         {
-                            dlof10.Remove(GetRecMsgMode(recmsg).UserID);
-                            SendMsg(recmsg, isection1.ElementAt(int.Parse(GetRecMsgMode(recmsg).RecMsgContent) - 1).Value.ToString().Replace(";", "\r\n")); //ini配置文件分隔符
+                            dlof10.Remove(msg.UserID);
+                            SendMsg(recmsg, isection1.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value.ToString().Replace(";", "\r\n")); //ini配置文件分隔符
                         }
                         else
                         {
-                            dlof10.Remove(GetRecMsgMode(recmsg).UserID);
+                            dlof10.Remove(msg.UserID);
                         }
                     }
                     catch (Exception)
                     {
-                        dlof10.Remove(GetRecMsgMode(recmsg).UserID);
+                        dlof10.Remove(msg.UserID);
                     }
                 }
             }
@@ -378,13 +379,14 @@ namespace NapCatDemo
 
         public void DownLoadWinISO(string recmsg)
         {
-            
-            if (GetRecMsgMode(recmsg).RecMsgContent.ToLower().Replace(" ", "").Equals("win10下载"))
+
+            RecMsgMode msg = GetRecMsgMode(recmsg);
+            if (msg.RecMsgContent.ToLower().Replace(" ", "").Equals("win10下载"))
             {
 
                 try
                 {
-                    dlwin10.Add(GetRecMsgMode(recmsg).UserID, GetRecMsgMode(recmsg).UserID);
+                    dlwin10.Add(msg.UserID, msg.UserID);
                 }
                 catch (Exception)
                 {
@@ -396,76 +398,93 @@ namespace NapCatDemo
             }
             if (dlwin10.Count > 0)
             {
-                KeyValuePair<long, long> windwl = dlwin10.FirstOrDefault(t => t.Key == GetRecMsgMode(recmsg).UserID);
-                if (windwl.Key == GetRecMsgMode(recmsg).UserID)
+                KeyValuePair<long, long> windwl = dlwin10.FirstOrDefault(t => t.Key == msg.UserID);
+                if (windwl.Key == msg.UserID)
                 {
                     try
                     {
-                        if (Regex.IsMatch(GetRecMsgMode(recmsg).RecMsgContent, "\\d") && int.Parse(GetRecMsgMode(recmsg).RecMsgContent) <= WinVerInfo.win10ver.Count)
+                        if (Regex.IsMatch(msg.RecMsgContent, "\\d") && int.Parse(msg.RecMsgContent) <= WinVerInfo.win10ver.Count)
                         {
-                            dlwin10.Remove(GetRecMsgMode(recmsg).UserID);
-                            if (GetDbISOAddr(recmsg, WinVerInfo.win10ver.ElementAt(int.Parse(GetRecMsgMode(recmsg).RecMsgContent) - 1).Value))
+                            dlwin10.Remove(msg.UserID);
+                            if (GetDbISOAddr(recmsg, WinVerInfo.win10ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value))
                             {
                                 WinISODownLoadAPI winl = new WinISODownLoadAPI();
-                                winl.GetWin10ISOaddr(windwl.Value, long.Parse(MC_SDK.Common.MC_API.GetRobotQQ()), WinVerInfo.win10ver.ElementAt(int.Parse(e.Msg) - 1).Key, WinVerInfo.win10ver.ElementAt(int.Parse(e.Msg) - 1).Value, true);
+                                winl.GetWin10ISOaddr(windwl.Value, msg.GroupID, WinVerInfo.win10ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Key, WinVerInfo.win10ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value, true);
                             }
                             // Common.xlzAPI.SendGroupMessage(e.ThisQQ, e.FromQQ, e.Msg);
                         }
                         else
                         {
-                            dlwin10.Remove(e.FromQQ);
+                            dlwin10.Remove(msg.UserID);
                         }
                     }
                     catch (Exception)
                     {
-                        dlwin10.Remove(e.FromQQ);
+                        dlwin10.Remove(msg.UserID);
                     }
                 }
             }
             
-            win11(e);
+            win11(recmsg);
         }
-        private void win11(PrivateMsg e)
+        private void win11(string recmsg)
         {
-            if (e.Msg.ToLower().Replace(" ", "").Equals("win11下载"))
+            RecMsgMode msg = GetRecMsgMode(recmsg);
+            if (msg.RecMsgContent.ToLower().Replace(" ", "").Equals("win11下载"))
             {
                 try
                 {
-                    dlwin11.Add(e.FromQQ, e.FromQQ);
+                    dlwin11.Add(msg.UserID, msg.UserID);
                 }
                 catch (Exception)
                 {
 
                     throw;
                 }
-                MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, WinVerInfo.sendstr_11);
+                SendMsg(recmsg, WinVerInfo.sendstr_11);
                 return;
             }
             if (dlwin11.Count > 0)
             {
-                KeyValuePair<long, long> windwl = dlwin11.FirstOrDefault(t => t.Key == e.FromQQ);
-                if (windwl.Key == e.FromQQ)
+                KeyValuePair<long, long> windwl = dlwin11.FirstOrDefault(t => t.Key == msg.UserID);
+                if (windwl.Key == msg.UserID)
                 {
                     try
                     {
-                        if (Regex.IsMatch(e.Msg, "\\d") && int.Parse(e.Msg) <= WinVerInfo.win11ver.Count)
+                        if (Regex.IsMatch(msg.RecMsgContent, "\\d") && int.Parse(msg.RecMsgContent) <= WinVerInfo.win11ver.Count)
                         {
-                            dlwin11.Remove(e.FromQQ);
-                            if (GetDbISOAddr(e, WinVerInfo.win11ver.ElementAt(int.Parse(e.Msg) - 1).Value))
+                            dlwin11.Remove(msg.UserID);
+                            if (GetDbISOAddr(recmsg, WinVerInfo.win11ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value))
                             {
                                 WinISODownLoadAPI winl = new WinISODownLoadAPI();
-                                winl.GetWin11ISOaddr(windwl.Value, long.Parse(MC_SDK.Common.MC_API.GetRobotQQ()), WinVerInfo.win11ver.ElementAt(int.Parse(e.Msg) - 1).Key, WinVerInfo.win11ver.ElementAt(int.Parse(e.Msg) - 1).Value, true);
+                                winl.SendMsgEvent += (szGruopId, szQQId, obj, isprivatemsg) =>
+                                {
+                                    Type type1 = obj.GetType();
+                                    string name = type1.Name;
+                                    string tn = type1.ToString();
+                                    if (type1.ToString().ToLower().Equals("system.string"))
+                                    {
+                                        SendMsg(recmsg, obj as string);
+                                    }
+                                    else if (type1.ToString().ToLower().Equals("system.string[]"))
+                                    {
+                                        string[] str = (string[])obj;
+                                        SendMsg(recmsg, str[0] + "\r\n" + str[1]);
+                                    }
+                                    
+                                };
+                                winl.GetWin11ISOaddr(windwl.Value, msg.GroupID, WinVerInfo.win11ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Key, WinVerInfo.win11ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value, true);
                             }
                             // Common.xlzAPI.SendGroupMessage(e.ThisQQ, e.FromQQ, e.Msg);
                         }
                         else
                         {
-                            dlwin11.Remove(e.FromQQ);
+                            dlwin11.Remove(msg.UserID);
                         }
                     }
                     catch (Exception)
                     {
-                        dlwin11.Remove(e.FromQQ);
+                        dlwin11.Remove(msg.UserID);
                     }
                 }
             }
@@ -504,7 +523,7 @@ namespace NapCatDemo
                         }
                         else
                         {
-                            MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
+                            SendMsg(recmsg, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
                             falg = false;
                         }
                     }
@@ -520,12 +539,13 @@ namespace NapCatDemo
             TimeSpan ts3 = ts1.Subtract(ts2).Duration();
             return ts3;
         }
-        private bool GetDb11ISOAddr(PrivateMsg e)
+        private bool GetDb11ISOAddr(string recmsg)
         {
             bool falg = true;
             string sql = $"select * from isoaddr where 版本信息='win11'";
             SqliteHelp_Until.SqliteHelp sqliteHelp = new SqliteHelp_Until.SqliteHelp(SqliteHelp_Until.DBConStr.sqlcon);
             System.Data.SQLite.SQLiteDataReader dr = sqliteHelp.SelcetDBDR(sql);
+            
             if (dr.HasRows)
             {
                 while (dr.Read())
@@ -545,7 +565,7 @@ namespace NapCatDemo
                         }
                         else
                         {
-                            MC_SDK.Common.MC_API.SendPrivateMsg_(e.FromQQ, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
+                            SendMsg(recmsg, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
                             falg = false;
                         }
                     }
