@@ -222,28 +222,32 @@ namespace NapCatDemo
                                     string msgtext = text.GetString();
                                     if (recmsgdic.RootElement.TryGetProperty("sub_type", out JsonElement subtype))
                                     {
-                                        if (subtype.GetString().Equals("friend") && string.IsNullOrEmpty(msgtext)) //好友消息
+                                        if (subtype.GetString().Equals("friend") && !string.IsNullOrEmpty(msgtext)) //好友消息
                                         {
                                             if (recmsgdic.RootElement.TryGetProperty("sender", out JsonElement sender) && sender.TryGetProperty("user_id", out JsonElement user_id))
                                             {
-                                                string _user_id = user_id.GetString();
-                                                string msg1 = $"{{\"action\":\"send_private_msg\",\"params\":{{\"user_id\":{_user_id},\"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}}";
+                                                long _user_id = user_id.GetInt64();
+                                                sendmsg = sendmsg.Replace("\r", "\\r").Replace("\n", "\\n");
+                                                string msg1 = $@"{{""action"":""send_private_msg"",""params"":{{""user_id"":{_user_id},""message"":""{sendmsg.ToString()}"",""auto_escape"":false}}, ""echo"":""""}}";
                                                 await client.SendAsync(msg1);
                                             }
                                         }
-                                        else if (subtype.GetString().Equals("group") && string.IsNullOrEmpty(msgtext))
+                                        else //if (subtype.GetString().Equals("group") && !string.IsNullOrEmpty(msgtext))
                                         {
+                                            //message_type":"group"，"sub_type":"normal" 群聊  "message_type":"private"，"sub_type":"group" 群私聊  "message_type":"private"，"sub_type":"friend" 好友
                                             if (recmsgdic.RootElement.TryGetProperty("message_type", out JsonElement messagetype))
                                             {
                                                 RecMsgMode msg = GetRecMsgMode(recmsg);
                                                 if (messagetype.GetString().Equals("private"))//群私聊消息
                                                 {
-                                                    string msg1 = $"{{\"action\":\"send_msg\",\"params\":{{\"message_type\":\"private\", \"user_id\":{msg.UserID},\"group_id\":{msg.GroupID}, \"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}}";
+                                                    sendmsg = sendmsg.Replace("\r", "\\r").Replace("\n", "\\n");
+                                                    string msg1 = $"{{\"action\":\"send_msg\",\"params\":{{\"message_type\":\"private\", \"user_id\":{msg.UserID},\"group_id\":{msg.GroupID}, \"message\":\"{sendmsg}\",\"auto_escape\":false}}, \"echo\":\"\"}}";
                                                     await client.SendAsync(msg1);
                                                 }
                                                 else if (messagetype.GetString().Equals("group"))//群消息
                                                 {
-                                                    string msg1 = $"{{\"action\":\"send_group_msg\",\"params\":{{\"group_id\":{msg.GroupID}, \"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}};";
+                                                    sendmsg = sendmsg.Replace("\r", "\\r").Replace("\n", "\\n");
+                                                    string msg1 = $"{{\"action\":\"send_group_msg\",\"params\":{{\"group_id\":{msg.GroupID}, \"message\":\"{sendmsg}\",\"auto_escape\":false}}, \"echo\":\"\"}}";
                                                     await client.SendAsync(msg1);
                                                 }
                                             }
@@ -288,11 +292,11 @@ namespace NapCatDemo
             System.Text.Json.JsonDocument recmsgdic = System.Text.Json.JsonDocument.Parse(recmsg);
             if (recmsgdic.RootElement.TryGetProperty("group_id", out JsonElement group_id))
             {
-                recmsgMode.GroupID = long.Parse(group_id.GetString());
+                recmsgMode.GroupID = group_id.GetInt64();
             }
             if (recmsgdic.RootElement.TryGetProperty("user_id", out JsonElement user_id))
             {
-                recmsgMode.UserID = long.Parse(user_id.GetString());
+                recmsgMode.UserID = user_id.GetInt64();
             }
             if (recmsgdic.RootElement.TryGetProperty("sub_type", out JsonElement sub_type))
             {
@@ -320,10 +324,10 @@ namespace NapCatDemo
 
         private void RobotWork(string recmsg)
         {
-            if (recmsg.Replace(" ", "").Equals("下载菜单"))
+            if (!string.IsNullOrEmpty(GetRecMsgMode(recmsg).RecMsgContent) && GetRecMsgMode(recmsg).RecMsgContent.Replace(" ", "").Equals("下载菜单"))
             {
                 CreateWinConfig();
-                string sendstr = "win11下载\r\nwin10下载\r\nwin8.1下载\r\n";
+                string sendstr = "win11下载\r\nwin10下载\r\n";
                 //string sendstr = "win10下载\r\nwin8.1下载\r\nwin7下载\r\n";
                 for (int i = 0; i < MTComon.Inode.Count(); i++)
                 {
