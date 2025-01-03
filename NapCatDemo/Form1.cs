@@ -450,6 +450,11 @@ namespace NapCatDemo
                                 WinISODownLoadAPI winl = new WinISODownLoadAPI();
                                 winl.SendMsgEvent += (szGruopId, szQQId, obj, isprivatemsg) =>
                                 {
+                                    if (obj==null)
+                                    {
+                                        SendMsg(recmsg, "获取失败");
+                                        return;
+                                    }
                                     Type type1 = obj.GetType();
                                     string name = type1.Name;
                                     string tn = type1.ToString();
