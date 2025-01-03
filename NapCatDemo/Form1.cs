@@ -17,6 +17,9 @@ using Native.Tool.IniConfig.Linq;
 using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.IO;
+using MsTool.IniFolder;
+using WinDownLoad.MyDB;
 
 namespace NapCatDemo
 {
@@ -37,10 +40,35 @@ namespace NapCatDemo
             //    string tn = type1.ToString();
             //};
             //winapi.GetWin11ISOaddr(414725048, 414725048, "", "3113", false);
+            CreateWinConfig();
             TouchSocket();
         }
         WebSocketClient client = new WebSocketClient();
-
+        private void CreateWinConfig()
+        {
+            CreateCQDb db = new CreateCQDb();
+            db.createDB();
+            if (!File.Exists(MTComon.Path))
+            {
+                IObject iobj = new IObject(MTComon.Path)
+                {
+                    new ISection("office下载")
+                    {
+                        {"1.Office 2013 专业增强零售版","http://officecdn.microsoft.com.edgesuite.net/db/39168D7E-077B-48E7-872C-B232C3E72675/media/zh-cn/ProPlusRetail.img;https://c2rsetup.officeapps.live.com/c2r/download.aspx?ProductreleaseID=ProfessionalRetail&platform=X86&language=zh-CN"},
+                        {"2.Office 2016 专业增强零售版","https://officecdn.microsoft.com/db/492350F6-3A01-4F97-B9C0-C7C6DDF67D60/media/zh-CN/ProPlusRetail.img;https://c2rsetup.officeapps.live.com/c2r/download.aspx?ProductreleaseID=ProPlusRetail&platform=X86&language=zh-CN"},
+                        {"3.Office 2019 专业增强零售版","https://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/zh-cn/ProPlus2019Retail.img;https://c2rsetup.officeapps.live.com/c2r/download.aspx?ProductreleaseID=ProPlus2019&platform=X86&language=zh-CN"},
+                        {"4.Office 2021 专业增强零售版","https://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/zh-cn/ProPlus2021Retail.img;https://c2rsetup.officeapps.live.com/c2r/download.aspx?ProductreleaseID=ProPlus2021&platform=X86&language=zh-CN"},
+                        {"5.Office 365 专业增强零售版","http://officecdn.microsoft.com.edgesuite.net/db/492350F6-3A01-4F97-B9C0-C7C6DDF67D60/media/zh-cn/O365ProPlusRetail.img;https://c2rsetup.officeapps.live.com/c2r/download.aspx?ProductreleaseID=O365ProPlusRetail&platform=X86&language=zh-CN"},
+                    }
+                };
+                iobj.Save();
+                MTComon.Inode = LoadIni.Load();
+            }
+            else
+            {
+                MTComon.Inode = LoadIni.Load();
+            }
+        }
         private void TouchSocket()
         {
             //var client = new WebSocketClient();
@@ -207,13 +235,16 @@ namespace NapCatDemo
                                         {
                                             if (recmsgdic.RootElement.TryGetProperty("message_type", out JsonElement messagetype))
                                             {
+                                                RecMsgMode msg = GetRecMsgMode(recmsg);
                                                 if (messagetype.GetString().Equals("private"))//群私聊消息
                                                 {
-
+                                                    string msg1 = $"{{\"action\":\"send_msg\",\"params\":{{\"message_type\":\"private\", \"user_id\":{msg.UserID},\"group_id\":{msg.GroupID}, \"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}}";
+                                                    await client.SendAsync(msg1);
                                                 }
                                                 else if (messagetype.GetString().Equals("group"))//群消息
                                                 {
-
+                                                    string msg1 = $"{{\"action\":\"send_group_msg\",\"params\":{{\"group_id\":{msg.GroupID}, \"message\":{sendmsg},\"auto_escape\":false}}, \"echo\":\"\"}};";
+                                                    await client.SendAsync(msg1);
                                                 }
                                             }
                                         }
@@ -291,6 +322,7 @@ namespace NapCatDemo
         {
             if (recmsg.Replace(" ", "").Equals("下载菜单"))
             {
+                CreateWinConfig();
                 string sendstr = "win11下载\r\nwin10下载\r\nwin8.1下载\r\n";
                 //string sendstr = "win10下载\r\nwin8.1下载\r\nwin7下载\r\n";
                 for (int i = 0; i < MTComon.Inode.Count(); i++)
@@ -301,9 +333,12 @@ namespace NapCatDemo
             }
         }
 
+        
+
         private void DownLoadofficeISO(string recmsg)
         {
             RecMsgMode msg = GetRecMsgMode(recmsg);
+            if (msg.RecMsgContent == null) { return; }
             int isname = -1;
             for (int i = 0; i < MTComon.Inode.Count; i++)
             {
@@ -370,7 +405,7 @@ namespace NapCatDemo
                     }
                 }
             }
-
+            DownLoadWinISO(recmsg);
         }
         private static Dictionary<long, long> dlof10 = new Dictionary<long, long>();
         private static Dictionary<long, long> dlwin10 = new Dictionary<long, long>();
@@ -409,6 +444,22 @@ namespace NapCatDemo
                             if (GetDbISOAddr(recmsg, WinVerInfo.win10ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value))
                             {
                                 WinISODownLoadAPI winl = new WinISODownLoadAPI();
+                                winl.SendMsgEvent += (szGruopId, szQQId, obj, isprivatemsg) =>
+                                {
+                                    Type type1 = obj.GetType();
+                                    string name = type1.Name;
+                                    string tn = type1.ToString();
+                                    if (type1.ToString().ToLower().Equals("system.string"))
+                                    {
+                                        SendMsg(recmsg, obj as string);
+                                    }
+                                    else if (type1.ToString().ToLower().Equals("system.string[]"))
+                                    {
+                                        string[] isoaddr = (string[])obj;
+                                        SendMsg(recmsg, "32位：" + isoaddr[0] + "\r\n" + "64位：" + isoaddr[1] + "\r\n" + " (此链接24小时内有效!)");
+                                    }
+
+                                };
                                 winl.GetWin10ISOaddr(windwl.Value, msg.GroupID, WinVerInfo.win10ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Key, WinVerInfo.win10ver.ElementAt(int.Parse(msg.RecMsgContent) - 1).Value, true);
                             }
                             // Common.xlzAPI.SendGroupMessage(e.ThisQQ, e.FromQQ, e.Msg);
@@ -468,8 +519,8 @@ namespace NapCatDemo
                                     }
                                     else if (type1.ToString().ToLower().Equals("system.string[]"))
                                     {
-                                        string[] str = (string[])obj;
-                                        SendMsg(recmsg, str[0] + "\r\n" + str[1]);
+                                        string[] isoaddr = (string[])obj;
+                                        SendMsg(recmsg, "32位：" + isoaddr[0] + "\r\n" + "64位：" + isoaddr[1] + "\r\n" + " (此链接24小时内有效!)");
                                     }
                                     
                                 };

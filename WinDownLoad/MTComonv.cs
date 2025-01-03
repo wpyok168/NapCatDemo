@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace WinDownLoad
 {
-    public class MTComon
+    public static class MTComon
     {
         private static IObject inode = LoadIni.Load();
         private static string path = System.Environment.CurrentDirectory + "\\下载配置.ini";
