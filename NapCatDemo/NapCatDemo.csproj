@@ -36,6 +36,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>微软图标.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.5.1\lib\net45\EntityFramework.dll</HintPath>
@@ -165,6 +168,9 @@
     <Analyzer Include="..\packages\TouchSocket.Core.3.0.9\analyzers\dotnet\cs\TouchSocket.Core.SourceGenerator.dll" />
     <Analyzer Include="..\packages\TouchSocket.Rpc.3.0.9\analyzers\dotnet\cs\TouchSocket.Rpc.SourceGenerator.dll" />
     <Analyzer Include="..\packages\TouchSocket.WebApi.3.0.9\analyzers\dotnet\cs\TouchSocket.WebApi.SourceGenerator.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="微软图标.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

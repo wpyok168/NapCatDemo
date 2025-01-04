@@ -229,6 +229,11 @@ namespace NapCatDemo
                                                 long _user_id = user_id.GetInt64();
                                                 sendmsg = sendmsg.Replace("\r", "\\r").Replace("\n", "\\n");
                                                 string msg1 = $@"{{""action"":""send_private_msg"",""params"":{{""user_id"":{_user_id},""message"":""{sendmsg.ToString()}"",""auto_escape"":false}}, ""echo"":""""}}";
+                                                if (this.richTextBox1.InvokeRequired)
+                                                {
+                                                    this.richTextBox1.Invoke(new Action(() => { this.richTextBox1.AppendText(sendmsg+"\r\n"); }));
+                                                }
+
                                                 await client.SendAsync(msg1);
                                             }
                                         }
@@ -242,12 +247,20 @@ namespace NapCatDemo
                                                 {
                                                     sendmsg = sendmsg.Replace("\r", "\\r").Replace("\n", "\\n");
                                                     string msg1 = $"{{\"action\":\"send_msg\",\"params\":{{\"message_type\":\"private\", \"user_id\":{msg.UserID},\"group_id\":{msg.GroupID}, \"message\":\"{sendmsg}\",\"auto_escape\":false}}, \"echo\":\"\"}}";
+                                                    if (this.richTextBox1.InvokeRequired)
+                                                    {
+                                                        this.richTextBox1.Invoke(new Action(() => { this.richTextBox1.AppendText(sendmsg + "\r\n"); }));
+                                                    }
                                                     await client.SendAsync(msg1);
                                                 }
                                                 else if (messagetype.GetString().Equals("group"))//群消息
                                                 {
                                                     sendmsg = sendmsg.Replace("\r", "\\r").Replace("\n", "\\n");
                                                     string msg1 = $"{{\"action\":\"send_group_msg\",\"params\":{{\"group_id\":{msg.GroupID}, \"message\":\"{sendmsg}\",\"auto_escape\":false}}, \"echo\":\"\"}}";
+                                                    if (this.richTextBox1.InvokeRequired)
+                                                    {
+                                                        this.richTextBox1.Invoke(new Action(() => { this.richTextBox1.AppendText(sendmsg + "\r\n"); }));
+                                                    }
                                                     await client.SendAsync(msg1);
                                                 }
                                             }
@@ -636,7 +649,9 @@ namespace NapCatDemo
             return falg;
         }
 
-
-
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            client.Close();
+        }
     }
 }
