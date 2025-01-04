@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("NapCatDemo")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("win系统下载QQ机器人")]
+[assembly: AssemblyDescription("福建-兮")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("NapCatDemo")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyProduct("win系统下载QQ机器人")]
+[assembly: AssemblyCopyright("福建-兮 Copyright ©  2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
