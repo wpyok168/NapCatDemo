@@ -45,8 +45,7 @@ namespace WinDownLoad
         {
             string str = "正从https://www.microsoft.com/zh-cn/software-download/windows11获取Win11镜像(" + szVerName + "),请稍等...";
             SendMsgEvent?.Invoke(szGruopId, szQQId, str, isprivatemsg);
-            System.Threading.Thread.Sleep(5000);
-            SendMsgEvent?.Invoke(szGruopId, szQQId, "str", isprivatemsg);
+            
             WinISODownLoad winIsoDownLoad = new WinISODownLoad();
             string[] ret = await winIsoDownLoad.GetWin11ISO2(productEditionId);
             if (ret == null)

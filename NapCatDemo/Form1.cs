@@ -385,6 +385,7 @@ namespace NapCatDemo
 
                 }
                 SendMsg(recmsg, sendstr);
+                return;
             }
             if (dlof10.Count > 0)
             {
