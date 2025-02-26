@@ -72,7 +72,7 @@ namespace NapCatDemo
         private void TouchSocket()
         {
             //var client = new WebSocketClient();
-            client.Setup(new TouchSocketConfig().SetRemoteIPHost("ws://127.0.0.1:5800")
+            client.Setup(new TouchSocketConfig().SetRemoteIPHost("ws://127.0.0.1:3001")
                 .ConfigureContainer(a =>
                 {
                     a.AddFileLogger();
@@ -479,7 +479,23 @@ namespace NapCatDemo
                                     else if (type1.ToString().ToLower().Equals("system.string[]"))
                                     {
                                         string[] isoaddr = (string[])obj;
-                                        SendMsg(recmsg, "32位：" + isoaddr[0] + "\r\n" + "64位：" + isoaddr[1] + "\r\n" + " (此链接24小时内有效!)");
+                                        if (isoaddr != null && isoaddr.Length > 1)
+                                        {
+                                            string x64 = string.Empty; string x32 = string.Empty;
+                                            foreach (string s in isoaddr) 
+                                            {
+                                                if (s.Contains("_x64"))
+                                                {
+                                                    x64 = s;
+                                                }
+                                                else
+                                                {
+                                                    x32 = s; 
+                                                }   
+                                            }
+                                            SendMsg(recmsg, "32位：" + x32 + "\r\n" + "64位：" + x64 + "\r\n" + " (此链接24小时内有效!)");
+                                        }
+                                        
                                     }
 
                                 };
@@ -543,7 +559,23 @@ namespace NapCatDemo
                                     else if (type1.ToString().ToLower().Equals("system.string[]"))
                                     {
                                         string[] isoaddr = (string[])obj;
-                                        SendMsg(recmsg, "32位：" + isoaddr[0] + "\r\n" + "64位：" + isoaddr[1] + "\r\n" + " (此链接24小时内有效!)");
+                                        if (isoaddr != null && isoaddr.Length > 1)
+                                        {
+                                            string x64 = string.Empty; string x32 = string.Empty;
+                                            foreach (string s in isoaddr)
+                                            {
+                                                if (s.Contains("_x64"))
+                                                {
+                                                    x64 = s;
+                                                }
+                                                else
+                                                {
+                                                    x32 = s;
+                                                }
+                                            }
+                                            SendMsg(recmsg, "32位：" + x32 + "\r\n" + "64位：" + x64 + "\r\n" + " (此链接24小时内有效!)");
+                                        }
+                                        //SendMsg(recmsg, "32位：" + isoaddr[0] + "\r\n" + "64位：" + isoaddr[1] + "\r\n" + " (此链接24小时内有效!)");
                                     }
                                     
                                 };
