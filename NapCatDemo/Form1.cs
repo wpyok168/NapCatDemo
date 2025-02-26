@@ -629,7 +629,23 @@ namespace NapCatDemo
                         }
                         else
                         {
-                            SendMsg(recmsg, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
+                            if (addr != null && addr.Length > 1)
+                            {
+                                string x64 = string.Empty; string x32 = string.Empty;
+                                foreach (string s in addr)
+                                {
+                                    if (s.Contains("_x64"))
+                                    {
+                                        x64 = s;
+                                    }
+                                    else
+                                    {
+                                        x32 = s;
+                                    }
+                                }
+                                SendMsg(recmsg, "32位：" + x32 + "\r\n" + "64位：" + x64 + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
+                            }
+                            //SendMsg(recmsg, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
                             falg = false;
                         }
                     }
@@ -671,7 +687,23 @@ namespace NapCatDemo
                         }
                         else
                         {
-                            SendMsg(recmsg, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
+                            if (addr != null && addr.Length > 1)
+                            {
+                                string x64 = string.Empty; string x32 = string.Empty;
+                                foreach (string s in addr)
+                                {
+                                    if (s.Contains("_x64"))
+                                    {
+                                        x64 = s;
+                                    }
+                                    else
+                                    {
+                                        x32 = s;
+                                    }
+                                }
+                                SendMsg(recmsg, "32位：" + x32 + "\r\n" + "64位：" + x64 + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
+                            }
+                            //SendMsg(recmsg, "32位：" + addr[0] + "\r\n" + "64位：" + addr[1] + "\r\n" + $" (此链接{dt.Hours}时{dt.Minutes}分内有效!)");
                             falg = false;
                         }
                     }
